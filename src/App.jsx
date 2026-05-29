@@ -3,6 +3,7 @@ import { supabase } from './lib/supabase'
 import Login from './pages/Login'
 import Navbar from './components/Navbar'
 import Seguranca from './pages/Seguranca'
+import Cadastros from './pages/Cadastros'
 
 export default function App() {
   const [sessao, setSessao] = useState(null)
@@ -67,7 +68,8 @@ export default function App() {
           </div>
         )}
         {pagina === 'seguranca' && modulosLiberados.includes('seguranca') && <Seguranca />}
-        {pagina !== 'dashboard' && pagina !== 'seguranca' && (
+        {pagina === 'cadastros' && modulosLiberados.includes('cadastros') && <Cadastros />}
+        {pagina !== 'dashboard' && pagina !== 'seguranca' && pagina !== 'cadastros' && (
           <div style={{ padding: '48px 28px', textAlign: 'center', color: '#999' }}>
             Módulo em construção — em breve disponível.
           </div>
