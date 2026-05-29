@@ -403,10 +403,12 @@ export default function PedidoEditora() {
                 <div style={s.cabLinha}><span style={s.cabKey}>CLIENTE</span><span style={s.cabVal}>{config?.nome_cliente}</span></div>
                 <div style={s.cabLinha}><span style={s.cabKey}>ENDEREÇO</span><span style={s.cabVal}>{config?.endereco}</span></div>
                 <div style={s.cabGrid2}>
-                  <div style={s.cabLinha}><span style={s.cabKey}>FORMA DE ENVIO</span><span style={s.cabVal}>{config?.forma_envio}</span></div>
+                  <div>
+                    <div style={s.cabLinha}><span style={s.cabKey}>FORMA DE ENVIO</span><span style={s.cabVal}>{config?.forma_envio}</span></div>
+                    <div style={s.cabLinha}><span style={s.cabKey}>COND. PAGAMENTO</span><span style={s.cabVal}>{config?.cond_pagamento}</span></div>
+                  </div>
                   <div style={s.cabLinha}><span style={s.cabKey}>CONTATO</span><span style={s.cabVal}>{config?.contato}</span></div>
                 </div>
-                <div style={s.cabLinha}><span style={s.cabKey}>COND. PAGAMENTO</span><span style={s.cabVal}>{config?.cond_pagamento}</span></div>
               </div>
             </div>
 
@@ -417,7 +419,7 @@ export default function PedidoEditora() {
                 <span className="no-print" style={{ width: '24px', flexShrink: 0 }}></span>
                 <span onClick={() => toggleSort('codigo_editora')} style={{ ...s.thClick, width: '80px', flexShrink: 0 }}>CÓD{seta('codigo_editora')}</span>
                 <span onClick={() => toggleSort('descricao')} style={{ ...s.thClick, flex: 1 }}>DESCRIÇÃO DO PEDIDO{seta('descricao')}</span>
-                <span onClick={() => toggleSort('quantidade')} style={{ ...s.thClick, width: '90px', textAlign: 'center', flexShrink: 0 }}>QT{seta('quantidade')}</span>
+                <span onClick={() => toggleSort('quantidade')} style={{ ...s.thClick, width: '65px', textAlign: 'center', flexShrink: 0 }}>QT{seta('quantidade')}</span>
                 <span onClick={() => toggleSort('valor_unitario_custo')} style={{ ...s.thClick, width: '100px', textAlign: 'right', flexShrink: 0 }}>VLr UNI{seta('valor_unitario_custo')}</span>
                 <span onClick={() => toggleSort('total')} style={{ ...s.thClick, width: '120px', textAlign: 'right', flexShrink: 0 }}>TOTAL{seta('total')}</span>
                 <span className="no-print" style={{ width: '40px', flexShrink: 0 }}></span>
@@ -485,7 +487,7 @@ export default function PedidoEditora() {
                         )}
                       </span>
                       <span style={{ flex: 1, fontSize: '13px' }}>{item.descricao}</span>
-                      <span style={{ width: '90px', flexShrink: 0, textAlign: 'center' }}>
+                      <span style={{ width: '65px', flexShrink: 0, textAlign: 'center' }}>
                         <input
                           className="no-print"
                           type="number" min="0"
@@ -575,18 +577,18 @@ const s = {
   botaoAdicionarTodas: { padding: '8px 14px', backgroundColor: '#e0f0ff', color: '#1a3a5c', border: '1px solid #93c5fd', borderRadius: '7px', cursor: 'pointer', fontSize: '13px', fontWeight: '600', whiteSpace: 'nowrap' },
   // Cabeçalho do pedido (estilo planilha)
   cabecalhoPedido: { backgroundColor: '#fff', border: '2px solid #1a3a5c', borderRadius: '8px', marginBottom: '16px', overflow: 'hidden' },
-  cabTitle: { backgroundColor: '#1a3a5c', color: '#fff', padding: '12px 20px', display: 'flex', gap: '24px', alignItems: 'center', fontSize: '15px', fontWeight: '700' },
+  cabTitle: { backgroundColor: '#1a3a5c', color: '#fff', padding: '8px 16px', display: 'flex', gap: '20px', alignItems: 'center', fontSize: '14px', fontWeight: '700' },
   cabSep: { backgroundColor: 'rgba(255,255,255,0.2)', padding: '2px 12px', borderRadius: '4px' },
-  cabGrid: { padding: '12px 20px', display: 'flex', flexDirection: 'column', gap: '8px' },
-  cabGrid2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' },
-  cabLinha: { display: 'flex', gap: '12px', alignItems: 'baseline', borderBottom: '1px solid #f0f0f0', paddingBottom: '6px' },
-  cabKey: { fontSize: '11px', fontWeight: '700', color: '#1a3a5c', minWidth: '140px', textTransform: 'uppercase' },
-  cabVal: { fontSize: '13px', color: '#333' },
+  cabGrid: { padding: '6px 16px 8px', display: 'flex', flexDirection: 'column', gap: '3px' },
+  cabGrid2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3px' },
+  cabLinha: { display: 'flex', gap: '8px', alignItems: 'baseline', borderBottom: '1px solid #f5f5f5', paddingBottom: '3px' },
+  cabKey: { fontSize: '10px', fontWeight: '700', color: '#1a3a5c', minWidth: '120px', textTransform: 'uppercase' },
+  cabVal: { fontSize: '12px', color: '#333' },
   // Tabela
   tabelaWrap: { backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e5e7eb', overflow: 'hidden' },
   tabelaHeader: { display: 'flex', padding: '10px 16px', backgroundColor: '#1a3a5c', color: '#fff', fontSize: '12px', fontWeight: '700', gap: '8px', alignItems: 'center', position: 'sticky', top: 0, zIndex: 2 },
   tabelaCorpo: { overflowY: 'auto', maxHeight: '420px' },
-  tabelaLinha: { display: 'flex', padding: '7px 16px', borderBottom: '1px solid #f0f0f0', alignItems: 'center', gap: '8px', fontSize: '13px' },
+  tabelaLinha: { display: 'flex', padding: '4px 16px', borderBottom: '1px solid #f0f0f0', alignItems: 'center', gap: '8px', fontSize: '13px' },
   thClick: { cursor: 'pointer', userSelect: 'none', width: '80px', textAlign: 'center', padding: '2px 4px', borderRadius: '4px', transition: 'background 0.1s' },
   dragHint: { fontSize: '11px', color: '#aaa', padding: '4px 16px', fontStyle: 'italic', backgroundColor: '#fafafa', borderBottom: '1px solid #f0f0f0' },
   sortHint: { fontSize: '12px', color: '#555', padding: '5px 16px', backgroundColor: '#f0f9ff', borderBottom: '1px solid #e0f0ff', display: 'flex', alignItems: 'center', gap: '8px' },
