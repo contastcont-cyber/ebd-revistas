@@ -1,14 +1,16 @@
 import { useState } from 'react'
-import FinanceiroIgrejas from './Igrejas'
-import Editora from './Editora'
+import PedidoEditora from './PedidoEditora'
+import PagamentosEditora from './PagamentosEditora'
+import ConfigEditora from './ConfigEditora'
 
 const ABAS = [
-  { key: 'igrejas', label: 'Igrejas' },
-  { key: 'editora', label: 'Editora' },
+  { key: 'pedido', label: 'Pedido' },
+  { key: 'pagamentos', label: 'Pagamentos' },
+  { key: 'config', label: 'Configurações' },
 ]
 
-export default function Financeiro() {
-  const [aba, setAba] = useState('igrejas')
+export default function Editora() {
+  const [aba, setAba] = useState('pedido')
   return (
     <div>
       <div style={s.abas}>
@@ -19,8 +21,9 @@ export default function Financeiro() {
           </button>
         ))}
       </div>
-      {aba === 'igrejas' && <FinanceiroIgrejas />}
-      {aba === 'editora' && <Editora />}
+      {aba === 'pedido' && <PedidoEditora />}
+      {aba === 'pagamentos' && <PagamentosEditora />}
+      {aba === 'config' && <ConfigEditora />}
     </div>
   )
 }

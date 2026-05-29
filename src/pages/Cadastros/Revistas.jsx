@@ -8,7 +8,7 @@ export default function Revistas() {
   const [filtro, setFiltro] = useState('')
   const [mostrarInativos, setMostrarInativos] = useState(false)
   const [editando, setEditando] = useState(null)
-  const [form, setForm] = useState({ codigo: '', nome: '', tipo_id: '', ativo: true })
+  const [form, setForm] = useState({ codigo: '', nome: '', tipo_id: '', codigo_editora: '', ativo: true })
   const [salvando, setSalvando] = useState(false)
   const [mensagem, setMensagem] = useState('')
   const [erro, setErro] = useState('')
@@ -37,7 +37,7 @@ export default function Revistas() {
   }
 
   function abrirEditar(r) {
-    setForm({ codigo: r.codigo, nome: r.nome, tipo_id: r.tipo_id, ativo: r.ativo })
+    setForm({ codigo: r.codigo, nome: r.nome, tipo_id: r.tipo_id, codigo_editora: r.codigo_editora || '', ativo: r.ativo })
     setEditando(r.id)
     setErro('')
   }
@@ -55,6 +55,7 @@ export default function Revistas() {
         codigo: form.codigo.trim().toUpperCase(),
         nome: form.nome.trim(),
         tipo_id: form.tipo_id,
+        codigo_editora: form.codigo_editora.trim() || null,
         ativo: form.ativo,
       })
       if (error) {
@@ -67,6 +68,7 @@ export default function Revistas() {
         codigo: form.codigo.trim().toUpperCase(),
         nome: form.nome.trim(),
         tipo_id: form.tipo_id,
+        codigo_editora: form.codigo_editora.trim() || null,
         ativo: form.ativo,
       }).eq('id', editando)
     }
@@ -276,6 +278,15 @@ export default function Revistas() {
                 <option value="false">Inativa</option>
               </select>
             </div>
+          </div>
+          <div style={styles.campo}>
+            <label style={styles.label}>Código da Editora</label>
+            <input
+              value={form.codigo_editora}
+              onChange={e => setForm(f => ({ ...f, codigo_editora: e.target.value }))}
+              style={styles.inputFull}
+              placeholder="Ex: 1742 (código usado nos pedidos à editora)"
+            />
           </div>
           <div style={styles.campo}>
             <label style={styles.label}>Nome completo da revista <span style={styles.obrig}>*</span></label>
