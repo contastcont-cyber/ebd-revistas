@@ -295,11 +295,13 @@ export default function PedidoEditora() {
     <div style={s.container}>
       {/* Print CSS */}
       <style>{`
+        .print-only { display: none; }
         @media print {
           body * { visibility: hidden; }
           #area-impressao, #area-impressao * { visibility: visible; }
           #area-impressao { position: fixed; top: 0; left: 0; width: 100%; }
           .no-print { display: none !important; }
+          .print-only { display: inline !important; }
         }
       `}</style>
 
@@ -389,9 +391,9 @@ export default function PedidoEditora() {
               {/* CABEÇALHO FIXO COM ORDENAÇÃO */}
               <div style={s.tabelaHeader}>
                 <span className="no-print" style={{ width: '24px' }}></span>
-                <span onClick={() => toggleSort('quantidade')} style={s.thClick}>QT{seta('quantidade')}</span>
                 <span onClick={() => toggleSort('codigo_editora')} style={s.thClick}>CÓD{seta('codigo_editora')}</span>
                 <span onClick={() => toggleSort('descricao')} style={{ ...s.thClick, flex: 1 }}>DESCRIÇÃO DO PEDIDO{seta('descricao')}</span>
+                <span onClick={() => toggleSort('quantidade')} style={{ ...s.thClick, width: '80px', textAlign: 'center' }}>QT{seta('quantidade')}</span>
                 <span onClick={() => toggleSort('valor_unitario_custo')} style={{ ...s.thClick, width: '110px', textAlign: 'right' }}>VLr UNI{seta('valor_unitario_custo')}</span>
                 <span onClick={() => toggleSort('total')} style={{ ...s.thClick, width: '120px', textAlign: 'right' }}>TOTAL{seta('total')}</span>
                 <span className="no-print" style={{ width: '40px' }}></span>
@@ -431,6 +433,10 @@ export default function PedidoEditora() {
                       <span className="no-print" style={{ width: '24px', color: '#ccc', fontSize: '16px', cursor: sortCol ? 'default' : 'grab', userSelect: 'none' }}>
                         {!sortCol && '⠿'}
                       </span>
+                      <span style={{ width: '80px', textAlign: 'center', fontSize: '13px', color: '#444' }}>
+                        {item.codigo_editora || '—'}
+                      </span>
+                      <span style={{ flex: 1, fontSize: '13px' }}>{item.descricao}</span>
                       <span style={{ width: '80px', textAlign: 'center' }}>
                         <input
                           className="no-print"
@@ -440,19 +446,8 @@ export default function PedidoEditora() {
                           style={s.inputQtd}
                           onMouseDown={e => e.stopPropagation()}
                         />
-                        <span className="print-only" style={{ display: 'none' }}>{item.quantidade || ''}</span>
+                        <span className="print-only">{item.quantidade || ''}</span>
                       </span>
-                      <span style={{ width: '80px', textAlign: 'center' }}>
-                        <input
-                          className="no-print"
-                          value={item.codigo_editora}
-                          onChange={e => setItemValor(realIdx, 'codigo_editora', e.target.value)}
-                          style={s.inputCod}
-                          onMouseDown={e => e.stopPropagation()}
-                        />
-                        <span className="print-only" style={{ display: 'none' }}>{item.codigo_editora}</span>
-                      </span>
-                      <span style={{ flex: 1, fontSize: '13px' }}>{item.descricao}</span>
                       <span style={{ width: '110px', textAlign: 'right' }}>
                         <input
                           className="no-print"
@@ -462,7 +457,7 @@ export default function PedidoEditora() {
                           style={s.inputPreco}
                           onMouseDown={e => e.stopPropagation()}
                         />
-                        <span className="print-only" style={{ display: 'none' }}>{Number(item.valor_unitario_custo) > 0 ? fmt(item.valor_unitario_custo) : ''}</span>
+                        <span className="print-only">{Number(item.valor_unitario_custo) > 0 ? fmt(item.valor_unitario_custo) : ''}</span>
                       </span>
                       <span style={{ width: '120px', textAlign: 'right', fontWeight: Number(item.quantidade) > 0 ? '600' : '400', color: Number(item.quantidade) > 0 ? '#1a3a5c' : '#ccc' }}>
                         {Number(item.quantidade) > 0 ? `R$ ${fmt(Number(item.quantidade) * Number(item.valor_unitario_custo))}` : '—'}
