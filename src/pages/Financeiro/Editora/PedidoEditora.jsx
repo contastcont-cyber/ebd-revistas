@@ -22,6 +22,9 @@ export default function PedidoEditora() {
   // Drag and drop
   const [dragIdx, setDragIdx] = useState(null)
   const [dragOverIdx, setDragOverIdx] = useState(null)
+  // Edição inline do código da editora
+  const [editandoCod, setEditandoCod] = useState(null) // revista_id
+  const [valorCodEdit, setValorCodEdit] = useState('')
 
   const numeroLabel = n => ['I', 'II', 'III', 'IV'][n - 1]
   const fmt = v => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })
@@ -177,6 +180,12 @@ export default function PedidoEditora() {
       if (va > vb) return sortDir === 'asc' ? 1 : -1
       return 0
     })
+  }
+
+  async function salvarCodEditora(revId) {
+    await supabase.from('revistas').update({ codigo_editora: valorCodEdit.trim() || null }).eq('id', revId)
+    setItens(its => its.map(i => i.revista_id === revId ? { ...i, codigo_editora: valorCodEdit.trim() } : i))
+    setEditandoCod(null)
   }
 
   function onDragStart(idx) { if (sortCol) return; setDragIdx(idx) }
@@ -438,8 +447,32 @@ export default function PedidoEditora() {
                       <span className="no-print" style={{ width: '24px', color: '#ccc', fontSize: '16px', cursor: sortCol ? 'default' : 'grab', userSelect: 'none' }}>
                         {!sortCol && '⠿'}
                       </span>
-                      <span style={{ width: '80px', textAlign: 'center', fontSize: '13px', color: '#444' }}>
-                        {item.codigo_editora || '—'}
+                      <span style={{ width: '80px', textAlign: 'center', fontSize: '13px' }}>
+                        {editandoCod === item.revista_id ? (
+                          <span style={{ display: 'flex', gap: '3px', alignItems: 'center', justifyContent: 'center' }}>
+                            <input
+                              autoFocus
+                              value={valorCodEdit}
+                              onChange={e => setValorCodEdit(e.target.value)}
+                              onKeyDown={e => { if (e.key === 'Enter') salvarCodEditora(item.revista_id); if (e.key === 'Escape') setEditandoCod(null) }}
+                              style={{ width: '56px', padding: '2px 4px', border: '2px solid #1a3a5c', borderRadius: '4px', fontSize: '12px', textAlign: 'center' }}
+                              onMouseDown={e => e.stopPropagation()}
+                            />
+                            <button onClick={() => salvarCodEditora(item.revista_id)} style={s.miniBotaoOk} title="Salvar">✓</button>
+                            <button onClick={() => setEditandoCod(null)} style={s.miniBotaoX} title="Cancelar">✕</button>
+                          </span>
+                        ) : (
+                          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                            <span style={{ color: item.codigo_editora ? '#444' : '#bbb' }}>{item.codigo_editora || '—'}</span>
+                            <button
+                              className="no-print"
+                              onClick={() => { setEditandoCod(item.revista_id); setValorCodEdit(item.codigo_editora || '') }}
+                              style={s.miniBotaoLapis}
+                              title="Editar código da editora"
+                              onMouseDown={e => e.stopPropagation()}
+                            >✎</button>
+                          </span>
+                        )}
                       </span>
                       <span style={{ flex: 1, fontSize: '13px' }}>{item.descricao}</span>
                       <span style={{ width: '80px', textAlign: 'center' }}>
@@ -548,6 +581,9 @@ const s = {
   dragHint: { fontSize: '11px', color: '#aaa', padding: '4px 16px', fontStyle: 'italic', backgroundColor: '#fafafa', borderBottom: '1px solid #f0f0f0' },
   sortHint: { fontSize: '12px', color: '#555', padding: '5px 16px', backgroundColor: '#f0f9ff', borderBottom: '1px solid #e0f0ff', display: 'flex', alignItems: 'center', gap: '8px' },
   limparSort: { background: 'none', border: 'none', color: '#1a3a5c', cursor: 'pointer', fontSize: '12px', textDecoration: 'underline', padding: 0 },
+  miniBotaoLapis: { background: 'none', border: 'none', color: '#aaa', cursor: 'pointer', fontSize: '13px', padding: '0 2px', lineHeight: 1 },
+  miniBotaoOk: { padding: '2px 5px', backgroundColor: '#059669', color: '#fff', border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '11px' },
+  miniBotaoX: { padding: '2px 5px', backgroundColor: '#e5e7eb', color: '#555', border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '11px' },
   inputQtd: { width: '60px', padding: '4px 6px', border: '1px solid #d1d5db', borderRadius: '5px', fontSize: '13px', textAlign: 'center' },
   inputCod: { width: '70px', padding: '4px 6px', border: '1px solid #d1d5db', borderRadius: '5px', fontSize: '12px', textAlign: 'center' },
   inputPreco: { width: '90px', padding: '4px 6px', border: '1px solid #d1d5db', borderRadius: '5px', fontSize: '13px', textAlign: 'right' },
