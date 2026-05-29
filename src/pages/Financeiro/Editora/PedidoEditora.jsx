@@ -311,11 +311,21 @@ export default function PedidoEditora() {
       <style>{`
         .print-only { display: none; }
         @media print {
+          @page { margin: 10mm; size: A4; }
           body * { visibility: hidden; }
           #area-impressao, #area-impressao * { visibility: visible; }
-          #area-impressao { position: fixed; top: 0; left: 0; width: 100%; }
+          #area-impressao {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+          }
+          #tabela-corpo-print {
+            overflow: visible !important;
+            max-height: none !important;
+          }
           .no-print { display: none !important; }
           .print-only { display: inline !important; }
+          * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
       `}</style>
 
@@ -404,17 +414,17 @@ export default function PedidoEditora() {
             <div style={s.tabelaWrap}>
               {/* CABEÇALHO FIXO COM ORDENAÇÃO */}
               <div style={s.tabelaHeader}>
-                <span className="no-print" style={{ width: '24px' }}></span>
-                <span onClick={() => toggleSort('codigo_editora')} style={s.thClick}>CÓD{seta('codigo_editora')}</span>
+                <span className="no-print" style={{ width: '24px', flexShrink: 0 }}></span>
+                <span onClick={() => toggleSort('codigo_editora')} style={{ ...s.thClick, width: '80px', flexShrink: 0 }}>CÓD{seta('codigo_editora')}</span>
                 <span onClick={() => toggleSort('descricao')} style={{ ...s.thClick, flex: 1 }}>DESCRIÇÃO DO PEDIDO{seta('descricao')}</span>
-                <span onClick={() => toggleSort('quantidade')} style={{ ...s.thClick, width: '80px', textAlign: 'center' }}>QT{seta('quantidade')}</span>
-                <span onClick={() => toggleSort('valor_unitario_custo')} style={{ ...s.thClick, width: '110px', textAlign: 'right' }}>VLr UNI{seta('valor_unitario_custo')}</span>
-                <span onClick={() => toggleSort('total')} style={{ ...s.thClick, width: '120px', textAlign: 'right' }}>TOTAL{seta('total')}</span>
-                <span className="no-print" style={{ width: '40px' }}></span>
+                <span onClick={() => toggleSort('quantidade')} style={{ ...s.thClick, width: '90px', textAlign: 'center', flexShrink: 0 }}>QT{seta('quantidade')}</span>
+                <span onClick={() => toggleSort('valor_unitario_custo')} style={{ ...s.thClick, width: '100px', textAlign: 'right', flexShrink: 0 }}>VLr UNI{seta('valor_unitario_custo')}</span>
+                <span onClick={() => toggleSort('total')} style={{ ...s.thClick, width: '120px', textAlign: 'right', flexShrink: 0 }}>TOTAL{seta('total')}</span>
+                <span className="no-print" style={{ width: '40px', flexShrink: 0 }}></span>
               </div>
 
               {/* LINHAS ROLÁVEIS */}
-              <div style={s.tabelaCorpo}>
+              <div id="tabela-corpo-print" style={s.tabelaCorpo}>
                 {sortCol === null && (
                   <div style={s.dragHint}>⠿ Arraste as linhas para reordenar — clique nos títulos das colunas para ordenar</div>
                 )}
@@ -444,10 +454,10 @@ export default function PedidoEditora() {
                         cursor: sortCol ? 'default' : 'grab',
                       }}
                     >
-                      <span className="no-print" style={{ width: '24px', color: '#ccc', fontSize: '16px', cursor: sortCol ? 'default' : 'grab', userSelect: 'none' }}>
+                      <span className="no-print" style={{ width: '24px', flexShrink: 0, color: '#ccc', fontSize: '16px', cursor: sortCol ? 'default' : 'grab', userSelect: 'none' }}>
                         {!sortCol && '⠿'}
                       </span>
-                      <span style={{ width: '80px', textAlign: 'center', fontSize: '13px' }}>
+                      <span style={{ width: '80px', flexShrink: 0, textAlign: 'center', fontSize: '13px' }}>
                         {editandoCod === item.revista_id ? (
                           <span style={{ display: 'flex', gap: '3px', alignItems: 'center', justifyContent: 'center' }}>
                             <input
@@ -475,7 +485,7 @@ export default function PedidoEditora() {
                         )}
                       </span>
                       <span style={{ flex: 1, fontSize: '13px' }}>{item.descricao}</span>
-                      <span style={{ width: '80px', textAlign: 'center' }}>
+                      <span style={{ width: '90px', flexShrink: 0, textAlign: 'center' }}>
                         <input
                           className="no-print"
                           type="number" min="0"
@@ -486,7 +496,7 @@ export default function PedidoEditora() {
                         />
                         <span className="print-only">{item.quantidade || ''}</span>
                       </span>
-                      <span style={{ width: '110px', textAlign: 'right' }}>
+                      <span style={{ width: '100px', flexShrink: 0, textAlign: 'right' }}>
                         <input
                           className="no-print"
                           type="number" min="0" step="0.01"
@@ -497,10 +507,10 @@ export default function PedidoEditora() {
                         />
                         <span className="print-only">{Number(item.valor_unitario_custo) > 0 ? fmt(item.valor_unitario_custo) : ''}</span>
                       </span>
-                      <span style={{ width: '120px', textAlign: 'right', fontWeight: Number(item.quantidade) > 0 ? '600' : '400', color: Number(item.quantidade) > 0 ? '#1a3a5c' : '#ccc' }}>
+                      <span style={{ width: '120px', flexShrink: 0, textAlign: 'right', fontWeight: Number(item.quantidade) > 0 ? '600' : '400', color: Number(item.quantidade) > 0 ? '#1a3a5c' : '#ccc' }}>
                         {Number(item.quantidade) > 0 ? `R$ ${fmt(Number(item.quantidade) * Number(item.valor_unitario_custo))}` : '—'}
                       </span>
-                      <span className="no-print" style={{ width: '40px', textAlign: 'center' }}>
+                      <span className="no-print" style={{ width: '40px', flexShrink: 0, textAlign: 'center' }}>
                         <button onClick={() => removerItem(realIdx)} style={s.botaoRemover} title="Remover do pedido">✕</button>
                       </span>
                     </div>
