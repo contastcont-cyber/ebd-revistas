@@ -330,25 +330,27 @@ export default function Revistas() {
           <span style={{ width: '80px' }}>Status</span>
           <span style={{ width: '120px' }}></span>
         </div>
-        {revistasFiltradas.length === 0 && (
-          <div style={styles.vazio}>{filtro ? 'Nenhuma revista encontrada.' : 'Nenhuma revista cadastrada ainda.'}</div>
-        )}
-        {revistasFiltradas.map(r => (
-          <div key={r.id} style={{ ...styles.tabelaLinha, opacity: r.ativo ? 1 : 0.5 }}>
-            <span style={{ width: '100px', fontWeight: '600', color: '#1a3a5c' }}>{r.codigo}</span>
-            <span style={{ flex: 3 }}>{r.nome}</span>
-            <span style={{ width: '120px' }}>
-              <span style={styles.tagTipo}>{r.tipos_revista?.codigo} — {r.tipos_revista?.descricao}</span>
-            </span>
-            <span style={{ width: '80px' }}>
-              <span style={r.ativo ? styles.badgeAtivo : styles.badgeInativo}>{r.ativo ? 'Ativa' : 'Inativa'}</span>
-            </span>
-            <span style={{ width: '120px', textAlign: 'right', display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
-              <button onClick={() => abrirEditar(r)} style={styles.botaoEditar}>Editar</button>
-              <button onClick={() => excluirRevista(r)} style={styles.botaoExcluir}>Excluir</button>
-            </span>
-          </div>
-        ))}
+        <div style={styles.tabelaCorpo}>
+          {revistasFiltradas.length === 0 && (
+            <div style={styles.vazio}>{filtro ? 'Nenhuma revista encontrada.' : 'Nenhuma revista cadastrada ainda.'}</div>
+          )}
+          {revistasFiltradas.map(r => (
+            <div key={r.id} style={{ ...styles.tabelaLinha, opacity: r.ativo ? 1 : 0.5 }}>
+              <span style={{ width: '100px', fontWeight: '600', color: '#1a3a5c' }}>{r.codigo}</span>
+              <span style={{ flex: 3 }}>{r.nome}</span>
+              <span style={{ width: '120px' }}>
+                <span style={styles.tagTipo}>{r.tipos_revista?.codigo} — {r.tipos_revista?.descricao}</span>
+              </span>
+              <span style={{ width: '80px' }}>
+                <span style={r.ativo ? styles.badgeAtivo : styles.badgeInativo}>{r.ativo ? 'Ativa' : 'Inativa'}</span>
+              </span>
+              <span style={{ width: '120px', textAlign: 'right', display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                <button onClick={() => abrirEditar(r)} style={styles.botaoEditar}>Editar</button>
+                <button onClick={() => excluirRevista(r)} style={styles.botaoExcluir}>Excluir</button>
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
@@ -392,7 +394,8 @@ const styles = {
   checkFiltro: { display: 'flex', alignItems: 'center', fontSize: '13px', color: '#555', cursor: 'pointer', whiteSpace: 'nowrap' },
   contador: { fontSize: '13px', color: '#888', marginBottom: '8px' },
   tabela: { backgroundColor: '#fff', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.07)', overflow: 'hidden' },
-  tabelaHeader: { display: 'flex', padding: '12px 20px', backgroundColor: '#f8fafc', borderBottom: '1px solid #e5e7eb', fontSize: '12px', fontWeight: '700', color: '#555', textTransform: 'uppercase', gap: '12px' },
+  tabelaHeader: { display: 'flex', padding: '12px 20px', backgroundColor: '#f8fafc', borderBottom: '1px solid #e5e7eb', fontSize: '12px', fontWeight: '700', color: '#555', textTransform: 'uppercase', gap: '12px', position: 'sticky', top: 0, zIndex: 1 },
+  tabelaCorpo: { overflowY: 'auto', maxHeight: '420px' },
   tabelaLinha: { display: 'flex', padding: '13px 20px', borderBottom: '1px solid #f0f0f0', alignItems: 'center', fontSize: '14px', gap: '12px' },
   tagTipo: { backgroundColor: '#f0f4f8', color: '#444', fontSize: '12px', padding: '3px 10px', borderRadius: '20px' },
   badgeAtivo: { backgroundColor: '#d1fae5', color: '#065f46', padding: '3px 10px', borderRadius: '20px', fontSize: '12px' },

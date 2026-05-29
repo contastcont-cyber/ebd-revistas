@@ -16,6 +16,12 @@ export default function PedidoEditora() {
   const [mensagem, setMensagem] = useState('')
   const [erro, setErro] = useState('')
   const printRef = useRef()
+  // Ordenação
+  const [sortCol, setSortCol] = useState(null) // 'codigo_editora'|'descricao'|'quantidade'|'valor_unitario_custo'|'total'
+  const [sortDir, setSortDir] = useState('asc')
+  // Drag and drop
+  const [dragIdx, setDragIdx] = useState(null)
+  const [dragOverIdx, setDragOverIdx] = useState(null)
 
   const numeroLabel = n => ['I', 'II', 'III', 'IV'][n - 1]
   const fmt = v => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })
@@ -113,6 +119,17 @@ export default function PedidoEditora() {
     setItens(its => its.map((it, i) => i === idx ? { ...it, [campo]: valor } : it))
   }
 
+  function adicionarTodas() {
+    const novas = revistasSemItem.map(r => ({
+      revista_id: r.id,
+      codigo_editora: r.codigo_editora || '',
+      descricao: r.nome,
+      quantidade: 0,
+      valor_unitario_custo: 0,
+    }))
+    setItens(its => [...its, ...novas].sort((a, b) => a.descricao.localeCompare(b.descricao)))
+  }
+
   function adicionarRevista(revId) {
     const rev = todasRevistas.find(r => r.id === revId)
     if (!rev || itens.find(i => i.revista_id === revId)) return
@@ -127,6 +144,51 @@ export default function PedidoEditora() {
 
   function removerItem(idx) {
     setItens(its => its.filter((_, i) => i !== idx))
+  }
+
+  // Ordenação por coluna
+  function toggleSort(col) {
+    if (sortCol === col) {
+      if (sortDir === 'asc') setSortDir('desc')
+      else { setSortCol(null); setSortDir('asc') }
+    } else {
+      setSortCol(col)
+      setSortDir('asc')
+    }
+  }
+
+  function getItensVisiveis() {
+    if (!sortCol) return itens
+    return [...itens].sort((a, b) => {
+      let va, vb
+      if (sortCol === 'total') {
+        va = Number(a.quantidade) * Number(a.valor_unitario_custo)
+        vb = Number(b.quantidade) * Number(b.valor_unitario_custo)
+      } else if (sortCol === 'quantidade' || sortCol === 'valor_unitario_custo') {
+        va = Number(a[sortCol]); vb = Number(b[sortCol])
+      } else {
+        va = (a[sortCol] || '').toLowerCase(); vb = (b[sortCol] || '').toLowerCase()
+      }
+      if (va < vb) return sortDir === 'asc' ? -1 : 1
+      if (va > vb) return sortDir === 'asc' ? 1 : -1
+      return 0
+    })
+  }
+
+  function onDragStart(idx) { if (sortCol) return; setDragIdx(idx) }
+  function onDragOver(e, idx) { e.preventDefault(); if (sortCol) return; setDragOverIdx(idx) }
+  function onDrop(idx) {
+    if (dragIdx === null || dragIdx === idx || sortCol) { setDragIdx(null); setDragOverIdx(null); return }
+    const nova = [...itens]
+    const [moved] = nova.splice(dragIdx, 1)
+    nova.splice(idx, 0, moved)
+    setItens(nova)
+    setDragIdx(null); setDragOverIdx(null)
+  }
+
+  function seta(col) {
+    if (sortCol !== col) return ' ↕'
+    return sortDir === 'asc' ? ' ↑' : ' ↓'
   }
 
   // Cálculos
@@ -281,10 +343,15 @@ export default function PedidoEditora() {
               <button onClick={copiarTrimstreAnterior} style={s.botaoSecundario}>⬆ Copiar do Trimestre Anterior</button>
               <span style={s.separador}>|</span>
               {revistasSemItem.length > 0 && (
-                <select onChange={e => { if (e.target.value) adicionarRevista(e.target.value); e.target.value = '' }} style={s.selectAdicionar}>
-                  <option value="">+ Adicionar revista ao pedido...</option>
-                  {revistasSemItem.map(r => <option key={r.id} value={r.id}>{r.codigo} — {r.nome}</option>)}
-                </select>
+                <>
+                  <select onChange={e => { if (e.target.value) adicionarRevista(e.target.value); e.target.value = '' }} style={s.selectAdicionar}>
+                    <option value="">+ Adicionar revista ao pedido...</option>
+                    {revistasSemItem.map(r => <option key={r.id} value={r.id}>{r.codigo} — {r.nome}</option>)}
+                  </select>
+                  <button onClick={adicionarTodas} style={s.botaoAdicionarTodas}>
+                    + Adicionar Todas ({revistasSemItem.length})
+                  </button>
+                </>
               )}
             </div>
             <div style={{ display: 'flex', gap: '10px' }}>
@@ -319,55 +386,94 @@ export default function PedidoEditora() {
 
             {/* TABELA */}
             <div style={s.tabelaWrap}>
+              {/* CABEÇALHO FIXO COM ORDENAÇÃO */}
               <div style={s.tabelaHeader}>
-                <span style={{ width: '80px', textAlign: 'center' }}>QT</span>
-                <span style={{ width: '80px', textAlign: 'center' }}>CÓD</span>
-                <span style={{ flex: 1 }}>DESCRIÇÃO DO PEDIDO</span>
-                <span style={{ width: '110px', textAlign: 'right' }}>VLr UNI</span>
-                <span style={{ width: '120px', textAlign: 'right' }}>TOTAL</span>
+                <span className="no-print" style={{ width: '24px' }}></span>
+                <span onClick={() => toggleSort('quantidade')} style={s.thClick}>QT{seta('quantidade')}</span>
+                <span onClick={() => toggleSort('codigo_editora')} style={s.thClick}>CÓD{seta('codigo_editora')}</span>
+                <span onClick={() => toggleSort('descricao')} style={{ ...s.thClick, flex: 1 }}>DESCRIÇÃO DO PEDIDO{seta('descricao')}</span>
+                <span onClick={() => toggleSort('valor_unitario_custo')} style={{ ...s.thClick, width: '110px', textAlign: 'right' }}>VLr UNI{seta('valor_unitario_custo')}</span>
+                <span onClick={() => toggleSort('total')} style={{ ...s.thClick, width: '120px', textAlign: 'right' }}>TOTAL{seta('total')}</span>
                 <span className="no-print" style={{ width: '40px' }}></span>
               </div>
 
-              {itens.map((item, idx) => (
-                <div key={idx} style={{ ...s.tabelaLinha, backgroundColor: Number(item.quantidade) > 0 ? '#fff' : '#fafafa' }}>
-                  <span style={{ width: '80px', textAlign: 'center' }}>
-                    <input
-                      className="no-print"
-                      type="number" min="0"
-                      value={item.quantidade}
-                      onChange={e => setItemValor(idx, 'quantidade', e.target.value)}
-                      style={s.inputQtd}
-                    />
-                    <span className="print-only" style={{ display: 'none' }}>{item.quantidade || ''}</span>
-                  </span>
-                  <span style={{ width: '80px', textAlign: 'center' }}>
-                    <input
-                      className="no-print"
-                      value={item.codigo_editora}
-                      onChange={e => setItemValor(idx, 'codigo_editora', e.target.value)}
-                      style={s.inputCod}
-                    />
-                    <span className="print-only" style={{ display: 'none' }}>{item.codigo_editora}</span>
-                  </span>
-                  <span style={{ flex: 1, fontSize: '13px' }}>{item.descricao}</span>
-                  <span style={{ width: '110px', textAlign: 'right' }}>
-                    <input
-                      className="no-print"
-                      type="number" min="0" step="0.01"
-                      value={item.valor_unitario_custo}
-                      onChange={e => setItemValor(idx, 'valor_unitario_custo', e.target.value)}
-                      style={s.inputPreco}
-                    />
-                    <span className="print-only" style={{ display: 'none' }}>{Number(item.valor_unitario_custo) > 0 ? fmt(item.valor_unitario_custo) : ''}</span>
-                  </span>
-                  <span style={{ width: '120px', textAlign: 'right', fontWeight: Number(item.quantidade) > 0 ? '600' : '400', color: Number(item.quantidade) > 0 ? '#1a3a5c' : '#ccc' }}>
-                    {Number(item.quantidade) > 0 ? `R$ ${fmt(Number(item.quantidade) * Number(item.valor_unitario_custo))}` : '—'}
-                  </span>
-                  <span className="no-print" style={{ width: '40px', textAlign: 'center' }}>
-                    <button onClick={() => removerItem(idx)} style={s.botaoRemover} title="Remover do pedido">✕</button>
-                  </span>
-                </div>
-              ))}
+              {/* LINHAS ROLÁVEIS */}
+              <div style={s.tabelaCorpo}>
+                {sortCol === null && (
+                  <div style={s.dragHint}>⠿ Arraste as linhas para reordenar — clique nos títulos das colunas para ordenar</div>
+                )}
+                {sortCol !== null && (
+                  <div style={s.sortHint}>
+                    Ordenando por <strong>{sortCol}</strong> {sortDir === 'asc' ? '▲' : '▼'} —
+                    <button onClick={() => setSortCol(null)} style={s.limparSort}>Voltar à ordem personalizada</button>
+                  </div>
+                )}
+                {getItensVisiveis().map((item, visIdx) => {
+                  const realIdx = itens.indexOf(item)
+                  const isDragging = dragIdx === realIdx
+                  const isDragOver = dragOverIdx === realIdx
+                  return (
+                    <div
+                      key={visIdx}
+                      draggable={!sortCol}
+                      onDragStart={() => onDragStart(realIdx)}
+                      onDragOver={e => onDragOver(e, realIdx)}
+                      onDrop={() => onDrop(realIdx)}
+                      onDragEnd={() => { setDragIdx(null); setDragOverIdx(null) }}
+                      style={{
+                        ...s.tabelaLinha,
+                        backgroundColor: isDragging ? '#e0f0ff' : isDragOver ? '#f0fdf4' : Number(item.quantidade) > 0 ? '#fff' : '#fafafa',
+                        borderTop: isDragOver ? '2px solid #059669' : undefined,
+                        opacity: isDragging ? 0.5 : 1,
+                        cursor: sortCol ? 'default' : 'grab',
+                      }}
+                    >
+                      <span className="no-print" style={{ width: '24px', color: '#ccc', fontSize: '16px', cursor: sortCol ? 'default' : 'grab', userSelect: 'none' }}>
+                        {!sortCol && '⠿'}
+                      </span>
+                      <span style={{ width: '80px', textAlign: 'center' }}>
+                        <input
+                          className="no-print"
+                          type="number" min="0"
+                          value={item.quantidade}
+                          onChange={e => setItemValor(realIdx, 'quantidade', e.target.value)}
+                          style={s.inputQtd}
+                          onMouseDown={e => e.stopPropagation()}
+                        />
+                        <span className="print-only" style={{ display: 'none' }}>{item.quantidade || ''}</span>
+                      </span>
+                      <span style={{ width: '80px', textAlign: 'center' }}>
+                        <input
+                          className="no-print"
+                          value={item.codigo_editora}
+                          onChange={e => setItemValor(realIdx, 'codigo_editora', e.target.value)}
+                          style={s.inputCod}
+                          onMouseDown={e => e.stopPropagation()}
+                        />
+                        <span className="print-only" style={{ display: 'none' }}>{item.codigo_editora}</span>
+                      </span>
+                      <span style={{ flex: 1, fontSize: '13px' }}>{item.descricao}</span>
+                      <span style={{ width: '110px', textAlign: 'right' }}>
+                        <input
+                          className="no-print"
+                          type="number" min="0" step="0.01"
+                          value={item.valor_unitario_custo}
+                          onChange={e => setItemValor(realIdx, 'valor_unitario_custo', e.target.value)}
+                          style={s.inputPreco}
+                          onMouseDown={e => e.stopPropagation()}
+                        />
+                        <span className="print-only" style={{ display: 'none' }}>{Number(item.valor_unitario_custo) > 0 ? fmt(item.valor_unitario_custo) : ''}</span>
+                      </span>
+                      <span style={{ width: '120px', textAlign: 'right', fontWeight: Number(item.quantidade) > 0 ? '600' : '400', color: Number(item.quantidade) > 0 ? '#1a3a5c' : '#ccc' }}>
+                        {Number(item.quantidade) > 0 ? `R$ ${fmt(Number(item.quantidade) * Number(item.valor_unitario_custo))}` : '—'}
+                      </span>
+                      <span className="no-print" style={{ width: '40px', textAlign: 'center' }}>
+                        <button onClick={() => removerItem(realIdx)} style={s.botaoRemover} title="Remover do pedido">✕</button>
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
 
               {/* TOTAIS */}
               <div style={s.totaisWrap}>
@@ -423,6 +529,7 @@ const s = {
   botaoExcel: { padding: '9px 16px', backgroundColor: '#059669', color: '#fff', border: 'none', borderRadius: '7px', cursor: 'pointer', fontSize: '13px' },
   separador: { color: '#d1d5db' },
   selectAdicionar: { padding: '8px 12px', border: '1px dashed #1a3a5c', borderRadius: '7px', fontSize: '13px', color: '#1a3a5c', backgroundColor: '#f0f9ff', cursor: 'pointer' },
+  botaoAdicionarTodas: { padding: '8px 14px', backgroundColor: '#e0f0ff', color: '#1a3a5c', border: '1px solid #93c5fd', borderRadius: '7px', cursor: 'pointer', fontSize: '13px', fontWeight: '600', whiteSpace: 'nowrap' },
   // Cabeçalho do pedido (estilo planilha)
   cabecalhoPedido: { backgroundColor: '#fff', border: '2px solid #1a3a5c', borderRadius: '8px', marginBottom: '16px', overflow: 'hidden' },
   cabTitle: { backgroundColor: '#1a3a5c', color: '#fff', padding: '12px 20px', display: 'flex', gap: '24px', alignItems: 'center', fontSize: '15px', fontWeight: '700' },
@@ -434,8 +541,13 @@ const s = {
   cabVal: { fontSize: '13px', color: '#333' },
   // Tabela
   tabelaWrap: { backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e5e7eb', overflow: 'hidden' },
-  tabelaHeader: { display: 'flex', padding: '10px 16px', backgroundColor: '#1a3a5c', color: '#fff', fontSize: '12px', fontWeight: '700', gap: '8px', alignItems: 'center' },
+  tabelaHeader: { display: 'flex', padding: '10px 16px', backgroundColor: '#1a3a5c', color: '#fff', fontSize: '12px', fontWeight: '700', gap: '8px', alignItems: 'center', position: 'sticky', top: 0, zIndex: 2 },
+  tabelaCorpo: { overflowY: 'auto', maxHeight: '420px' },
   tabelaLinha: { display: 'flex', padding: '7px 16px', borderBottom: '1px solid #f0f0f0', alignItems: 'center', gap: '8px', fontSize: '13px' },
+  thClick: { cursor: 'pointer', userSelect: 'none', width: '80px', textAlign: 'center', padding: '2px 4px', borderRadius: '4px', transition: 'background 0.1s' },
+  dragHint: { fontSize: '11px', color: '#aaa', padding: '4px 16px', fontStyle: 'italic', backgroundColor: '#fafafa', borderBottom: '1px solid #f0f0f0' },
+  sortHint: { fontSize: '12px', color: '#555', padding: '5px 16px', backgroundColor: '#f0f9ff', borderBottom: '1px solid #e0f0ff', display: 'flex', alignItems: 'center', gap: '8px' },
+  limparSort: { background: 'none', border: 'none', color: '#1a3a5c', cursor: 'pointer', fontSize: '12px', textDecoration: 'underline', padding: 0 },
   inputQtd: { width: '60px', padding: '4px 6px', border: '1px solid #d1d5db', borderRadius: '5px', fontSize: '13px', textAlign: 'center' },
   inputCod: { width: '70px', padding: '4px 6px', border: '1px solid #d1d5db', borderRadius: '5px', fontSize: '12px', textAlign: 'center' },
   inputPreco: { width: '90px', padding: '4px 6px', border: '1px solid #d1d5db', borderRadius: '5px', fontSize: '13px', textAlign: 'right' },
