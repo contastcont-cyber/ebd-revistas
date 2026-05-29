@@ -58,10 +58,14 @@ export default function PedidoEditora() {
       setDesconto(ped.desconto_percentual || config?.desconto_percentual || 50)
       const { data: itensData } = await supabase
         .from('itens_pedido_editora')
-        .select('*')
+        .select('*, revistas(codigo_editora)')
         .eq('pedido_editora_id', ped.id)
         .order('descricao')
-      setItens(itensData || [])
+      // Sempre usa o codigo_editora atual da revista cadastrada
+      setItens((itensData || []).map(i => ({
+        ...i,
+        codigo_editora: i.revistas?.codigo_editora || i.codigo_editora || '',
+      })))
     } else {
       setPedido(null)
       setItens([])
@@ -192,9 +196,10 @@ export default function PedidoEditora() {
   }
 
   // Cálculos
-  const subTotal = itens.reduce((s, i) => s + (Number(i.quantidade) * Number(i.valor_unitario_custo)), 0)
-  const valorDesconto = subTotal * (desconto / 100)
-  const totalLiquido = subTotal - valorDesconto
+  const arred = v => Math.round(v * 100) / 100
+  const subTotal = arred(itens.reduce((s, i) => s + (Number(i.quantidade) * Number(i.valor_unitario_custo)), 0))
+  const valorDesconto = arred(subTotal * (desconto / 100))
+  const totalLiquido = arred(subTotal - valorDesconto)
   const totalQtd = itens.reduce((s, i) => s + Number(i.quantidade || 0), 0)
 
   async function salvarPedido(itensParam, descontoParam) {
