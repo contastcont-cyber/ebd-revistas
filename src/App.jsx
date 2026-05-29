@@ -7,6 +7,7 @@ import Cadastros from './pages/Cadastros'
 import Trimestres from './pages/Trimestres'
 import Pedidos from './pages/Pedidos'
 import Entregas from './pages/Entregas'
+import Financeiro from './pages/Financeiro'
 
 export default function App() {
   const [sessao, setSessao] = useState(null)
@@ -75,7 +76,8 @@ export default function App() {
         {pagina === 'trimestres' && modulosLiberados.includes('trimestres') && <Trimestres />}
         {pagina === 'pedidos' && modulosLiberados.includes('pedidos') && <Pedidos />}
         {pagina === 'entregas' && modulosLiberados.includes('entregas') && <Entregas />}
-        {pagina !== 'dashboard' && pagina !== 'seguranca' && pagina !== 'cadastros' && pagina !== 'trimestres' && pagina !== 'pedidos' && pagina !== 'entregas' && (
+        {pagina === 'financeiro' && modulosLiberados.includes('financeiro') && <Financeiro />}
+        {pagina !== 'dashboard' && pagina !== 'seguranca' && pagina !== 'cadastros' && pagina !== 'trimestres' && pagina !== 'pedidos' && pagina !== 'entregas' && pagina !== 'financeiro' && (
           <div style={{ padding: '48px 28px', textAlign: 'center', color: '#999' }}>
             Módulo em construção — em breve disponível.
           </div>
