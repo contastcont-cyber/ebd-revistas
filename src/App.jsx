@@ -5,6 +5,7 @@ import Navbar from './components/Navbar'
 import Seguranca from './pages/Seguranca'
 import Cadastros from './pages/Cadastros'
 import Trimestres from './pages/Trimestres'
+import Pedidos from './pages/Pedidos'
 
 export default function App() {
   const [sessao, setSessao] = useState(null)
@@ -71,7 +72,8 @@ export default function App() {
         {pagina === 'seguranca' && modulosLiberados.includes('seguranca') && <Seguranca />}
         {pagina === 'cadastros' && modulosLiberados.includes('cadastros') && <Cadastros />}
         {pagina === 'trimestres' && modulosLiberados.includes('trimestres') && <Trimestres />}
-        {pagina !== 'dashboard' && pagina !== 'seguranca' && pagina !== 'cadastros' && pagina !== 'trimestres' && (
+        {pagina === 'pedidos' && modulosLiberados.includes('pedidos') && <Pedidos />}
+        {pagina !== 'dashboard' && pagina !== 'seguranca' && pagina !== 'cadastros' && pagina !== 'trimestres' && pagina !== 'pedidos' && (
           <div style={{ padding: '48px 28px', textAlign: 'center', color: '#999' }}>
             Módulo em construção — em breve disponível.
           </div>

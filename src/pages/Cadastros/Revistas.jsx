@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
+import Alerta from '../../components/Alerta'
 
 export default function Revistas() {
   const [revistas, setRevistas] = useState([])
@@ -11,6 +12,7 @@ export default function Revistas() {
   const [salvando, setSalvando] = useState(false)
   const [mensagem, setMensagem] = useState('')
   const [erro, setErro] = useState('')
+  const [alerta, setAlerta] = useState(null) // { titulo, mensagem, tipo, onConfirmar, onCancelar, textoBotao }
 
   // gestão de tipos
   const [editandoTipo, setEditandoTipo] = useState(null)
@@ -77,6 +79,74 @@ export default function Revistas() {
   }
 
   // --- TIPOS ---
+  async function excluirTipo(t) {
+    const { count } = await supabase
+      .from('revistas')
+      .select('*', { count: 'exact', head: true })
+      .eq('tipo_id', t.id)
+
+    if (count > 0) {
+      setAlerta({
+        titulo: 'Exclusão bloqueada',
+        mensagem: `Não é possível excluir o tipo "${t.descricao}" pois ele está sendo usado por ${count} revista${count > 1 ? 's' : ''} cadastrada${count > 1 ? 's' : ''}. Remova ou altere o tipo das revistas antes de excluir.`,
+        tipo: 'erro',
+        onConfirmar: () => setAlerta(null),
+        textoBotao: 'Entendi',
+      })
+      return
+    }
+
+    setAlerta({
+      titulo: 'Excluir tipo',
+      mensagem: `Deseja excluir o tipo "${t.descricao}" (${t.codigo})? Esta ação não pode ser desfeita.`,
+      tipo: 'perigo',
+      textoBotao: 'Sim, excluir',
+      onCancelar: () => setAlerta(null),
+      onConfirmar: async () => {
+        await supabase.from('tipos_revista').delete().eq('id', t.id)
+        setAlerta(null)
+        carregar()
+      },
+    })
+  }
+
+  async function excluirRevista(r) {
+    const [{ count: countItens }, { count: countPrecos }] = await Promise.all([
+      supabase.from('itens_pedido').select('*', { count: 'exact', head: true }).eq('revista_id', r.id),
+      supabase.from('precos_revistas').select('*', { count: 'exact', head: true }).eq('revista_id', r.id),
+    ])
+
+    if (countItens > 0 || countPrecos > 0) {
+      const motivos = []
+      if (countPrecos > 0) motivos.push(`preço cadastrado em ${countPrecos} trimestre${countPrecos > 1 ? 's' : ''}`)
+      if (countItens > 0) motivos.push(`utilizada em ${countItens} pedido${countItens > 1 ? 's' : ''} de igrejas`)
+
+      setAlerta({
+        titulo: 'Exclusão bloqueada',
+        mensagem: `Não é possível excluir a revista "${r.nome}" pois ela já foi utilizada no sistema (${motivos.join(' e ')}). Para retirá-la de circulação, use o botão Editar e marque como Inativa.`,
+        tipo: 'erro',
+        onConfirmar: () => setAlerta(null),
+        textoBotao: 'Entendi',
+      })
+      return
+    }
+
+    setAlerta({
+      titulo: 'Excluir revista',
+      mensagem: `Deseja excluir a revista "${r.nome}" (${r.codigo})? Esta ação não pode ser desfeita.`,
+      tipo: 'perigo',
+      textoBotao: 'Sim, excluir',
+      onCancelar: () => setAlerta(null),
+      onConfirmar: async () => {
+        await supabase.from('revistas').delete().eq('id', r.id)
+        setAlerta(null)
+        setMensagem('Revista excluída com sucesso.')
+        setTimeout(() => setMensagem(''), 3000)
+        carregar()
+      },
+    })
+  }
+
   function abrirNovoTipo() {
     setFormTipo({ codigo: '', descricao: '' })
     setEditandoTipo('novo')
@@ -120,6 +190,8 @@ export default function Revistas() {
   return (
     <div style={styles.container}>
 
+      {alerta && <Alerta {...alerta} />}
+
       {/* TIPOS DE REVISTA */}
       <div style={styles.secaoTipos}>
         <div style={styles.tiposCabecalho}>
@@ -132,6 +204,7 @@ export default function Revistas() {
               <span style={styles.tipoCodigo}>{t.codigo}</span>
               <span style={styles.tipoDesc}>{t.descricao}</span>
               <button onClick={() => abrirEditarTipo(t)} style={styles.botaoEditarTipo}>Editar</button>
+              <button onClick={() => excluirTipo(t)} style={styles.botaoExcluirTipo}>Excluir</button>
             </div>
           ))}
         </div>
@@ -244,7 +317,7 @@ export default function Revistas() {
           <span style={{ flex: 3 }}>Nome</span>
           <span style={{ width: '120px' }}>Tipo</span>
           <span style={{ width: '80px' }}>Status</span>
-          <span style={{ width: '80px' }}></span>
+          <span style={{ width: '120px' }}></span>
         </div>
         {revistasFiltradas.length === 0 && (
           <div style={styles.vazio}>{filtro ? 'Nenhuma revista encontrada.' : 'Nenhuma revista cadastrada ainda.'}</div>
@@ -259,8 +332,9 @@ export default function Revistas() {
             <span style={{ width: '80px' }}>
               <span style={r.ativo ? styles.badgeAtivo : styles.badgeInativo}>{r.ativo ? 'Ativa' : 'Inativa'}</span>
             </span>
-            <span style={{ width: '80px', textAlign: 'right' }}>
+            <span style={{ width: '120px', textAlign: 'right', display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
               <button onClick={() => abrirEditar(r)} style={styles.botaoEditar}>Editar</button>
+              <button onClick={() => excluirRevista(r)} style={styles.botaoExcluir}>Excluir</button>
             </span>
           </div>
         ))}
@@ -280,6 +354,7 @@ const styles = {
   tipoCodigo: { fontWeight: '700', color: '#1a3a5c', minWidth: '24px' },
   tipoDesc: { color: '#444' },
   botaoEditarTipo: { padding: '2px 8px', backgroundColor: 'transparent', color: '#888', border: '1px solid #d1d5db', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' },
+  botaoExcluirTipo: { padding: '2px 8px', backgroundColor: 'transparent', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' },
   tipoForm: { display: 'flex', gap: '8px', alignItems: 'center', marginTop: '10px', flexWrap: 'wrap' },
   inputPequeno: { padding: '7px 10px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '13px' },
   botaoSalvarTipo: { padding: '7px 14px', backgroundColor: '#1a3a5c', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' },
@@ -312,5 +387,6 @@ const styles = {
   badgeAtivo: { backgroundColor: '#d1fae5', color: '#065f46', padding: '3px 10px', borderRadius: '20px', fontSize: '12px' },
   badgeInativo: { backgroundColor: '#fee2e2', color: '#991b1b', padding: '3px 10px', borderRadius: '20px', fontSize: '12px' },
   botaoEditar: { padding: '6px 14px', backgroundColor: '#f0f4f8', color: '#1a3a5c', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' },
+  botaoExcluir: { padding: '6px 14px', backgroundColor: '#fff0f0', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' },
   vazio: { padding: '40px', textAlign: 'center', color: '#999', fontSize: '14px' },
 }
