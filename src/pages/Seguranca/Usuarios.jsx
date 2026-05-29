@@ -82,11 +82,6 @@ export default function Usuarios() {
         <button onClick={abrirNovo} style={styles.botaoNovo}>+ Novo Usuário</button>
       </div>
 
-      <div style={styles.aviso}>
-        <strong>Atenção:</strong> Para criar novos usuários, desative a confirmação de e-mail no Supabase:<br />
-        Authentication → Providers → Email → desmarque <em>"Confirm email"</em>
-      </div>
-
       {mensagem && <div style={styles.sucesso}>{mensagem}</div>}
 
       {editando && (
@@ -174,7 +169,6 @@ const styles = {
   cabecalho: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' },
   titulo: { fontSize: '22px', color: '#1a3a5c', margin: 0 },
   botaoNovo: { padding: '9px 20px', backgroundColor: '#1a3a5c', color: '#fff', border: 'none', borderRadius: '7px', cursor: 'pointer', fontSize: '14px' },
-  aviso: { backgroundColor: '#fef9c3', border: '1px solid #fde68a', borderRadius: '7px', padding: '12px 16px', fontSize: '13px', color: '#713f12', marginBottom: '20px', lineHeight: '1.6' },
   sucesso: { backgroundColor: '#d1fae5', color: '#065f46', padding: '10px 16px', borderRadius: '7px', marginBottom: '16px', fontSize: '14px' },
   formulario: { backgroundColor: '#fff', borderRadius: '10px', padding: '24px', marginBottom: '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' },
   formTitulo: { fontSize: '17px', color: '#1a3a5c', marginBottom: '20px' },

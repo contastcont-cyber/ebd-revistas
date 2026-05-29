@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Igrejas from './Igrejas'
+import Revistas from './Revistas'
 
 const ABAS = [
   { key: 'igrejas', label: 'Igrejas' },
@@ -23,11 +24,7 @@ export default function Cadastros() {
         ))}
       </div>
       {aba === 'igrejas' && <Igrejas />}
-      {aba === 'revistas' && (
-        <div style={{ padding: '48px', textAlign: 'center', color: '#999' }}>
-          Cadastro de Revistas — disponível na próxima etapa.
-        </div>
-      )}
+      {aba === 'revistas' && <Revistas />}
     </div>
   )
 }
