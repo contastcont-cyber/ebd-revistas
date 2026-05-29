@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import Igrejas from './Igrejas'
 import Revistas from './Revistas'
+import Precos from './Precos'
 
 const ABAS = [
   { key: 'igrejas', label: 'Igrejas' },
   { key: 'revistas', label: 'Revistas' },
+  { key: 'precos', label: 'Preços por Trimestre' },
 ]
 
 export default function Cadastros() {
@@ -25,6 +27,7 @@ export default function Cadastros() {
       </div>
       {aba === 'igrejas' && <Igrejas />}
       {aba === 'revistas' && <Revistas />}
+      {aba === 'precos' && <Precos />}
     </div>
   )
 }
