@@ -12,7 +12,9 @@ export default function Revistas() {
   const [salvando, setSalvando] = useState(false)
   const [mensagem, setMensagem] = useState('')
   const [erro, setErro] = useState('')
-  const [alerta, setAlerta] = useState(null) // { titulo, mensagem, tipo, onConfirmar, onCancelar, textoBotao }
+  const [alerta, setAlerta] = useState(null)
+  const [sortCol, setSortCol] = useState('codigo')
+  const [sortDir, setSortDir] = useState('asc')
 
   // gestão de tipos
   const [editandoTipo, setEditandoTipo] = useState(null)
@@ -50,27 +52,38 @@ export default function Revistas() {
     setSalvando(true)
     setErro('')
 
-    if (editando === 'novo') {
-      const { error } = await supabase.from('revistas').insert({
+    try {
+      const dados = {
         codigo: form.codigo.trim().toUpperCase(),
         nome: form.nome.trim(),
         tipo_id: form.tipo_id,
         codigo_editora: form.codigo_editora.trim() || null,
         ativo: form.ativo,
-      })
-      if (error) {
-        setErro(error.code === '23505' ? 'Já existe uma revista com esse código.' : 'Erro: ' + error.message)
-        setSalvando(false)
-        return
       }
-    } else {
-      await supabase.from('revistas').update({
-        codigo: form.codigo.trim().toUpperCase(),
-        nome: form.nome.trim(),
-        tipo_id: form.tipo_id,
-        codigo_editora: form.codigo_editora.trim() || null,
-        ativo: form.ativo,
-      }).eq('id', editando)
+
+      if (editando === 'novo') {
+        const { error } = await supabase.from('revistas').insert(dados)
+        if (error) {
+          setErro(error.code === '23505'
+            ? `Já existe uma revista cadastrada com o código "${form.codigo.trim().toUpperCase()}". Use um código diferente.`
+            : 'Erro ao salvar: ' + error.message)
+          setSalvando(false)
+          return
+        }
+      } else {
+        const { error } = await supabase.from('revistas').update(dados).eq('id', editando)
+        if (error) {
+          setErro(error.code === '23505'
+            ? `Já existe outra revista com o código "${form.codigo.trim().toUpperCase()}".`
+            : 'Erro ao salvar: ' + error.message)
+          setSalvando(false)
+          return
+        }
+      }
+    } catch (e) {
+      setErro('Erro inesperado: ' + e.message)
+      setSalvando(false)
+      return
     }
 
     setSalvando(false)
@@ -149,6 +162,16 @@ export default function Revistas() {
     })
   }
 
+  function toggleSort(col) {
+    if (sortCol === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+    else { setSortCol(col); setSortDir('asc') }
+  }
+
+  function seta(col) {
+    if (sortCol !== col) return ' ↕'
+    return sortDir === 'asc' ? ' ↑' : ' ↓'
+  }
+
   function abrirNovoTipo() {
     setFormTipo({ codigo: '', descricao: '' })
     setEditandoTipo('novo')
@@ -178,16 +201,31 @@ export default function Revistas() {
     carregar()
   }
 
-  const revistasFiltradas = revistas.filter(r => {
-    if (!mostrarInativos && !r.ativo) return false
-    if (!filtro) return true
-    const f = filtro.toLowerCase()
-    return (
-      r.codigo.toLowerCase().includes(f) ||
-      r.nome.toLowerCase().includes(f) ||
-      (r.tipos_revista?.descricao || '').toLowerCase().includes(f)
-    )
-  })
+  const revistasFiltradas = revistas
+    .filter(r => {
+      if (!mostrarInativos && !r.ativo) return false
+      if (!filtro) return true
+      const f = filtro.toLowerCase()
+      return (
+        r.codigo.toLowerCase().includes(f) ||
+        (r.codigo_editora || '').toLowerCase().includes(f) ||
+        r.nome.toLowerCase().includes(f) ||
+        (r.tipos_revista?.descricao || '').toLowerCase().includes(f)
+      )
+    })
+    .sort((a, b) => {
+      let va, vb
+      if (sortCol === 'tipo') {
+        va = (a.tipos_revista?.descricao || '').toLowerCase()
+        vb = (b.tipos_revista?.descricao || '').toLowerCase()
+      } else {
+        va = (a[sortCol] || '').toLowerCase()
+        vb = (b[sortCol] || '').toLowerCase()
+      }
+      if (va < vb) return sortDir === 'asc' ? -1 : 1
+      if (va > vb) return sortDir === 'asc' ? 1 : -1
+      return 0
+    })
 
   return (
     <div style={styles.container}>
@@ -324,9 +362,10 @@ export default function Revistas() {
 
       <div style={styles.tabela}>
         <div style={styles.tabelaHeader}>
-          <span style={{ width: '100px' }}>Código</span>
-          <span style={{ flex: 3 }}>Nome</span>
-          <span style={{ width: '120px' }}>Tipo</span>
+          <span onClick={() => toggleSort('codigo')} style={styles.thClick}>Código{seta('codigo')}</span>
+          <span onClick={() => toggleSort('codigo_editora')} style={{ ...styles.thClick, width: '100px' }}>Cód. Editora{seta('codigo_editora')}</span>
+          <span onClick={() => toggleSort('nome')} style={{ ...styles.thClick, flex: 3 }}>Nome{seta('nome')}</span>
+          <span onClick={() => toggleSort('tipo')} style={{ ...styles.thClick, width: '120px' }}>Tipo{seta('tipo')}</span>
           <span style={{ width: '80px' }}>Status</span>
           <span style={{ width: '120px' }}></span>
         </div>
@@ -337,6 +376,9 @@ export default function Revistas() {
           {revistasFiltradas.map(r => (
             <div key={r.id} style={{ ...styles.tabelaLinha, opacity: r.ativo ? 1 : 0.5 }}>
               <span style={{ width: '100px', fontWeight: '600', color: '#1a3a5c' }}>{r.codigo}</span>
+              <span style={{ width: '100px', color: r.codigo_editora ? '#444' : '#ccc', fontSize: '13px' }}>
+                {r.codigo_editora || '—'}
+              </span>
               <span style={{ flex: 3 }}>{r.nome}</span>
               <span style={{ width: '120px' }}>
                 <span style={styles.tagTipo}>{r.tipos_revista?.codigo} — {r.tipos_revista?.descricao}</span>
@@ -395,6 +437,7 @@ const styles = {
   contador: { fontSize: '13px', color: '#888', marginBottom: '8px' },
   tabela: { backgroundColor: '#fff', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.07)', overflow: 'hidden' },
   tabelaHeader: { display: 'flex', padding: '12px 20px', backgroundColor: '#f8fafc', borderBottom: '1px solid #e5e7eb', fontSize: '12px', fontWeight: '700', color: '#555', textTransform: 'uppercase', gap: '12px', position: 'sticky', top: 0, zIndex: 1 },
+  thClick: { cursor: 'pointer', userSelect: 'none', width: '100px', padding: '2px 4px', borderRadius: '4px' },
   tabelaCorpo: { overflowY: 'auto', maxHeight: '420px' },
   tabelaLinha: { display: 'flex', padding: '13px 20px', borderBottom: '1px solid #f0f0f0', alignItems: 'center', fontSize: '14px', gap: '12px' },
   tagTipo: { backgroundColor: '#f0f4f8', color: '#444', fontSize: '12px', padding: '3px 10px', borderRadius: '20px' },
